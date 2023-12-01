@@ -1,0 +1,5 @@
+# Ignore inputs + build stuff
+inputs/
+target/
+
+*/target/
