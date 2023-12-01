@@ -19,6 +19,38 @@ zoneight234
 
 const INPUT: &str = include_str!("../../inputs/day-01.txt");
 
+fn check_spelled_digits(line: &str, i: usize) -> Option<char> {
+    let mut digit = None;
+    if i < line.len() {
+        if i >= 2 {
+            digit = match &line[i - 2..=i] {
+                "one" => Some('1'),
+                "two" => Some('2'),
+                "six" => Some('6'),
+                _ => None,
+            }
+        }
+        if i >= 3 {
+            digit = match &line[i - 3..=i] {
+                "four" => Some('4'),
+                "five" => Some('5'),
+                "nine" => Some('9'),
+                _ => None,
+            }
+        }
+        if i >= 4 {
+            digit = match &line[i - 4..=i] {
+                "three" => Some('3'),
+                "seven" => Some('7'),
+                "eight" => Some('8'),
+                _ => None,
+            }
+        }
+    }
+
+    digit
+}
+
 fn main() -> Result<()> {
     println!("Day 01");
     println!(
@@ -43,31 +75,8 @@ fn main() -> Result<()> {
                     if c.is_digit(10) {
                         digits.push(c);
                     }
-                    if i < line.len() {
-                        if i >= 2 {
-                            match &line[i - 2..=i] {
-                                "one" => digits.push('1'),
-                                "two" => digits.push('2'),
-                                "six" => digits.push('6'),
-                                _ => {}
-                            }
-                        }
-                        if i >= 3 {
-                            match &line[i - 3..=i] {
-                                "four" => digits.push('4'),
-                                "five" => digits.push('5'),
-                                "nine" => digits.push('9'),
-                                _ => {}
-                            }
-                        }
-                        if i >= 4 {
-                            match &line[i - 4..=i] {
-                                "three" => digits.push('3'),
-                                "seven" => digits.push('7'),
-                                "eight" => digits.push('8'),
-                                _ => {}
-                            }
-                        }
+                    if let Some(digit) = check_spelled_digits(line, i) {
+                        digits.push(digit)
                     }
                 }
                 format!("{}{}", digits[0], digits[digits.len() - 1]).parse::<usize>()
