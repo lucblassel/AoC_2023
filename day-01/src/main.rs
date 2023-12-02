@@ -70,15 +70,15 @@ fn main() -> Result<()> {
         INPUT
             .split_whitespace()
             .map(|line| {
-                let mut digits = vec![];
-                for (i, c) in line.char_indices() {
-                    if c.is_digit(10) {
-                        digits.push(c);
-                    }
-                    if let Some(digit) = check_spelled_digits(line, i) {
-                        digits.push(digit)
-                    }
-                }
+                let digits = line
+                    .char_indices()
+                    .map(|(i, c)| {
+                        c.is_digit(10)
+                            .then_some(c)
+                            .or(check_spelled_digits(line, i))
+                    })
+                    .flatten()
+                    .collect_vec();
                 format!("{}{}", digits[0], digits[digits.len() - 1]).parse::<usize>()
             })
             .flatten()
