@@ -57,11 +57,10 @@ fn main() -> Result<()> {
         "\t1: {}",
         INPUT
             .split_whitespace()
-            .map(|line| {
-                let digits = line.chars().filter(|c| c.is_digit(10)).collect_vec();
+            .flat_map(|line| {
+                let digits = line.chars().filter(|c| c.is_ascii_digit()).collect_vec();
                 format!("{}{}", digits[0], digits[digits.len() - 1]).parse::<usize>()
             })
-            .flatten()
             .sum::<usize>()
     );
 
@@ -69,19 +68,17 @@ fn main() -> Result<()> {
         "\t2: {}",
         INPUT
             .split_whitespace()
-            .map(|line| {
+            .flat_map(|line| {
                 let digits = line
                     .char_indices()
-                    .map(|(i, c)| {
-                        c.is_digit(10)
+                    .flat_map(|(i, c)| {
+                        c.is_ascii_digit()
                             .then_some(c)
                             .or(check_spelled_digits(line, i))
                     })
-                    .flatten()
                     .collect_vec();
                 format!("{}{}", digits[0], digits[digits.len() - 1]).parse::<usize>()
             })
-            .flatten()
             .sum::<usize>()
     );
 
