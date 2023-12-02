@@ -25,7 +25,7 @@ const MAX_R: i32 = 12;
 const MAX_G: i32 = 13;
 const MAX_B: i32 = 14;
 
-fn main() -> Result<()> {
+fn main() {
     let games = INPUT
         .split('\n')
         .flat_map(parse_game)
@@ -33,30 +33,29 @@ fn main() -> Result<()> {
         .collect_vec();
 
     println!("Day 02");
-    println!(
-        "\t1: {}",
-        games
-            .iter()
-            .filter(|(_, draws)| {
-                draws
-                    .iter()
-                    .all(|draw| draw.is_possible(MAX_R, MAX_G, MAX_B))
-            })
-            .fold(0, |acc, (id, _)| acc + id)
-    );
+    println!("\t1: {}", part_1(&games));
+    println!("\t2: {}", part_2(&games));
+}
 
-    println!(
-        "\t2: {}",
-        games
-            .iter()
-            .map(|(_, draws)| {
-                let max = draws.iter().fold(Draw::default(), |acc, d| acc.max(d));
-                max.red * max.green * max.blue
-            })
-            .sum::<i32>()
-    );
+fn part_1(games: &[(i32, Vec<Draw>)]) -> i32 {
+    games
+        .iter()
+        .filter(|(_, draws)| {
+            draws
+                .iter()
+                .all(|draw| draw.is_possible(MAX_R, MAX_G, MAX_B))
+        })
+        .fold(0, |acc, (id, _)| acc + id)
+}
 
-    Ok(())
+fn part_2(games: &[(i32, Vec<Draw>)]) -> i32 {
+    games
+        .iter()
+        .map(|(_, draws)| {
+            let max = draws.iter().fold(Draw::default(), |acc, d| acc.max(d));
+            max.red * max.green * max.blue
+        })
+        .sum()
 }
 
 #[derive(Default, Debug)]
@@ -125,4 +124,28 @@ fn parse_game(input: &str) -> IResult<&str, (i32, Vec<Draw>)> {
         tag(": "),
         separated_list1(tag("; "), parse_draw),
     )(input)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_games(input: &str) -> Vec<(i32, Vec<Draw>)> {
+        input
+            .split('\n')
+            .flat_map(parse_game)
+            .map(|(_, game)| game)
+            .collect_vec()
+    }
+
+    #[test]
+    fn test_1() {
+        let games = parse_games(TEST_1);
+        assert_eq!(8, part_1(&games));
+    }
+    #[test]
+    fn test_2() {
+        let games = parse_games(TEST_1);
+        assert_eq!(2286, part_2(&games));
+    }
 }
