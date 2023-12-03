@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use anyhow::Result;
 
@@ -18,26 +18,30 @@ const TEST_1: &str = "467..114..
 const INPUT: &str = include_str!("../../inputs/day-03.txt");
 
 fn main() -> Result<()> {
+    let (numbers, symbols) = parse_board(INPUT);
     println!("Day 03");
-    println!("\t1: {}", part_1(INPUT)?);
-    println!("\t2: {}", part_2(INPUT)?);
+    println!("\t1: {}", part_1(&numbers, &symbols)?);
+    println!("\t2: {}", part_2(&numbers, &symbols)?);
 
     Ok(())
 }
 
 fn neighbours(x: usize, y: usize, number_size: usize) -> Vec<(usize, usize)> {
-    let mut ys = (y..=y + number_size).map(|y| Some(y)).collect_vec();
+    let mut ys = (y..=y + number_size).map(Some).collect_vec();
     ys.push(y.checked_sub(1));
-    ys.iter()
+    ys.into_iter()
         .cartesian_product(vec![x.checked_sub(1), Some(x), Some(x + 1)])
         .flat_map(|(y, x)| match (x, y) {
-            (Some(x), Some(y)) => Some((x.clone(), y.clone())),
+            (Some(x), Some(y)) => Some((x, y)),
             _ => None,
         })
         .collect_vec()
 }
 
-fn parse_board(input: &str) -> (Vec<(String, (usize, usize))>, HashMap<(usize, usize), char>) {
+type Numbers = Vec<(String, (usize, usize))>;
+type Symbols = HashMap<(usize, usize), char>;
+
+fn parse_board(input: &str) -> (Numbers, Symbols) {
     let mut numbers = vec![];
     let mut symbols = HashMap::new();
     let mut curr = String::new();
@@ -70,8 +74,8 @@ fn parse_board(input: &str) -> (Vec<(String, (usize, usize))>, HashMap<(usize, u
     (numbers, symbols)
 }
 
-fn part_1(input: &str) -> Result<usize> {
-    let (numbers, symbols) = parse_board(input);
+fn part_1(numbers: &Numbers, symbols: &Symbols) -> Result<usize> {
+    // let (numbers, symbols) = parse_board(input);
     Ok(numbers
         .iter()
         .filter(|(num, (x, y))| {
@@ -83,38 +87,24 @@ fn part_1(input: &str) -> Result<usize> {
         .sum())
 }
 
-fn part_2(input: &str) -> Result<usize> {
-    let (numbers, symbols) = parse_board(input);
+fn part_2(numbers: &Numbers, symbols: &Symbols) -> Result<usize> {
+    // let (numbers, symbols) = parse_board(input);
 
-    let groups = numbers
+    let mut gears = HashMap::new();
+    for (num, (x, y)) in numbers.iter() {
+        for coords in neighbours(*x, *y, num.len()) {
+            if let Some('*') = symbols.get(&coords) {
+                let n = num.parse::<usize>()?;
+                gears.entry(coords).or_insert_with(Vec::new).push(n);
+            }
+        }
+    }
+
+    Ok(gears
         .iter()
-        .flat_map(|(n, (x, y))| {
-            neighbours(*x, *y, n.len())
-                .into_iter()
-                .flat_map(|c| match symbols.get(&c) {
-                    Some('*') => Some((c, n.clone())),
-                    _ => None,
-                })
-        })
-        .group_by(|(c, _)| c.clone());
-
-    Ok(groups
-        .into_iter()
-        .flat_map(|(_, v)| {
-            v.enumerate()
-                .map(|(i, (_, v))| (i, v.parse::<usize>().unwrap()))
-                .fold(Some((0, 1)), |acc, (i, v)| {
-                    if i > 1 {
-                        return None;
-                    }
-                    if let Some((_, acc_v)) = acc {
-                        Some((i, acc_v * v))
-                    } else {
-                        None
-                    }
-                })
-        })
-        .fold(0, |acc, (i, v)| if i == 1 { acc + v } else { acc }))
+        .filter(|(_, v)| v.len() == 2)
+        .map(|(_, v)| v[0] * v[1])
+        .sum())
 }
 
 #[cfg(test)]
@@ -123,11 +113,13 @@ mod tests {
 
     #[test]
     fn test_1() {
-        assert_eq!(4361, part_1(TEST_1).unwrap());
+        let (n, s) = parse_board(TEST_1);
+        assert_eq!(4361, part_1(&n, &s).unwrap());
     }
 
     #[test]
     fn test_2() {
-        assert_eq!(467835, part_2(TEST_1).unwrap());
+        let (n, s) = parse_board(TEST_1);
+        assert_eq!(467835, part_2(&n, &s).unwrap());
     }
 }
