@@ -102,7 +102,17 @@ mod tests {
     }
 
     #[test]
+    fn test_input_1() {
+        assert_eq!(54338, part_1(INPUT))
+    }
+
+    #[test]
     fn test_2() {
         assert_eq!(281, part_2(TEST_2))
+    }
+
+    #[test]
+    fn test_input_2() {
+        assert_eq!(53389, part_2(INPUT))
     }
 }

@@ -118,8 +118,20 @@ mod tests {
     }
 
     #[test]
+    fn test_input_1() {
+        let (n, s) = parse_board(INPUT);
+        assert_eq!(530495, part_1(&n, &s).unwrap());
+    }
+
+    #[test]
     fn test_2() {
         let (n, s) = parse_board(TEST_1);
         assert_eq!(467835, part_2(&n, &s).unwrap());
+    }
+
+    #[test]
+    fn test_input_2() {
+        let (n, s) = parse_board(INPUT);
+        assert_eq!(80253814, part_2(&n, &s).unwrap());
     }
 }

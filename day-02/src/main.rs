@@ -20,9 +20,9 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
 #[allow(dead_code)]
 const INPUT: &str = include_str!("../../inputs/day-02.txt");
 
-const MAX_R: i32 = 12;
-const MAX_G: i32 = 13;
-const MAX_B: i32 = 14;
+const MAX_R: usize = 12;
+const MAX_G: usize = 13;
+const MAX_B: usize = 14;
 
 fn main() {
     let games = INPUT
@@ -36,7 +36,7 @@ fn main() {
     println!("\t2: {}", part_2(&games));
 }
 
-fn part_1(games: &[(i32, Vec<Draw>)]) -> i32 {
+fn part_1(games: &[(usize, Vec<Draw>)]) -> usize {
     games
         .iter()
         .filter(|(_, draws)| {
@@ -47,7 +47,7 @@ fn part_1(games: &[(i32, Vec<Draw>)]) -> i32 {
         .fold(0, |acc, (id, _)| acc + id)
 }
 
-fn part_2(games: &[(i32, Vec<Draw>)]) -> i32 {
+fn part_2(games: &[(usize, Vec<Draw>)]) -> usize {
     games
         .iter()
         .map(|(_, draws)| {
@@ -59,9 +59,9 @@ fn part_2(games: &[(i32, Vec<Draw>)]) -> i32 {
 
 #[derive(Default, Debug)]
 struct Draw {
-    red: i32,
-    green: i32,
-    blue: i32,
+    red: usize,
+    green: usize,
+    blue: usize,
 }
 
 impl Draw {
@@ -73,13 +73,13 @@ impl Draw {
         }
     }
 
-    fn is_possible(&self, max_red: i32, max_green: i32, max_blue: i32) -> bool {
+    fn is_possible(&self, max_red: usize, max_green: usize, max_blue: usize) -> bool {
         self.red <= max_red && self.green <= max_green && self.blue <= max_blue
     }
 }
 
 // PARSING
-fn parse_count(input: &str) -> IResult<&str, i32> {
+fn parse_count(input: &str) -> IResult<&str, usize> {
     map_res(digit1, str::parse)(input)
 }
 
@@ -117,7 +117,7 @@ fn parse_draw(input: &str) -> IResult<&str, Draw> {
     ))
 }
 
-fn parse_game(input: &str) -> IResult<&str, (i32, Vec<Draw>)> {
+fn parse_game(input: &str) -> IResult<&str, (usize, Vec<Draw>)> {
     separated_pair(
         preceded(tag("Game "), parse_count),
         tag(": "),
@@ -129,7 +129,7 @@ fn parse_game(input: &str) -> IResult<&str, (i32, Vec<Draw>)> {
 mod tests {
     use super::*;
 
-    fn parse_games(input: &str) -> Vec<(i32, Vec<Draw>)> {
+    fn parse_games(input: &str) -> Vec<(usize, Vec<Draw>)> {
         input
             .split('\n')
             .flat_map(parse_game)
@@ -142,9 +142,22 @@ mod tests {
         let games = parse_games(TEST_1);
         assert_eq!(8, part_1(&games));
     }
+
+    #[test]
+    fn test_input_1() {
+        let games = parse_games(INPUT);
+        assert_eq!(2545, part_1(&games));
+    }
+
     #[test]
     fn test_2() {
         let games = parse_games(TEST_1);
         assert_eq!(2286, part_2(&games));
+    }
+
+    #[test]
+    fn test_input_2() {
+        let games = parse_games(INPUT);
+        assert_eq!(78111, part_2(&games));
     }
 }
