@@ -95,30 +95,25 @@ fn part_2(seeds: &[usize], maps: &[Map<usize>]) -> Result<usize> {
         seed_ranges = seed_ranges
             .iter()
             .flat_map(|seed_range| {
-                let intersections = map
-                    .iter()
-                    .flat_map(move |(src, dest)| {
-                        range_intersect(seed_range.clone(), src.clone()).map(|inter| {
-                            let off_s = inter.start - src.start;
-                            let off_e = src.end - inter.end;
-
-                            (inter, (dest.start + off_s)..(dest.end - off_e))
-                        })
-                    })
-                    .collect_vec();
-
                 let mut valid_ranges = vec![];
-                let mut remainder = vec![seed_range.clone()];
+                let mut remainders = vec![seed_range.clone()];
 
-                for (inter, mapped) in intersections {
+                for (inter, mapped) in map.iter().flat_map(move |(src, dest)| {
+                    range_intersect(seed_range.clone(), src.clone()).map(|inter| {
+                        let off_s = inter.start - src.start;
+                        let off_e = src.end - inter.end;
+
+                        (inter, (dest.start + off_s)..(dest.end - off_e))
+                    })
+                }) {
                     valid_ranges.push(mapped);
-                    remainder = remainder
+                    remainders = remainders
                         .iter()
                         .flat_map(|r| exclude_from_range(r.clone(), inter.clone()))
                         .collect_vec();
                 }
 
-                valid_ranges.extend_from_slice(&remainder[..]);
+                valid_ranges.extend_from_slice(&remainders[..]);
                 valid_ranges
             })
             .collect_vec();
