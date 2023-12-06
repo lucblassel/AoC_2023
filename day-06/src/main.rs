@@ -30,34 +30,10 @@ fn part_1(input: &'static str) -> Result<i64> {
     Ok(races.iter().flat_map(|race| race.solve()).product())
 }
 
-fn find_roots(a: i64, b: i64, c: i64) -> Option<(i64, i64)> {
-    let det = b.pow(2) - (4 * a * c);
-
-    if det > 0 {
-        let r1: f64 = (-(b as f64) - f64::sqrt(det as f64)) / (2. * a as f64);
-        let r2: f64 = (-(b as f64) + f64::sqrt(det as f64)) / (2. * a as f64);
-
-        let r1_s = r1.min(r2);
-        let r2_s = r1.max(r2);
-
-        Some((f64::ceil(r1_s) as i64, f64::floor(r2_s) as i64))
-    } else if det == 0 {
-        Some((-b / (2 * a), -b / (2 * a)))
-    } else {
-        None
-    }
-}
-
 fn part_2(input: &str) -> Result<i64> {
     let parsed = input
         .lines()
-        .flat_map(|line| {
-            line.split_whitespace()
-                .into_iter()
-                .skip(1)
-                .join("")
-                .parse::<i64>()
-        })
+        .flat_map(|line| line.split_whitespace().skip(1).join("").parse())
         .collect_vec();
 
     Race {
@@ -68,8 +44,19 @@ fn part_2(input: &str) -> Result<i64> {
     .context("Could not solve race")
 }
 
-fn parse_numbers(input: &str) -> IResult<&str, Vec<i64>> {
-    separated_list1(space1, map_res(digit1, str::parse))(input)
+fn find_roots(a: i64, b: i64, c: i64) -> Option<(i64, i64)> {
+    let det = b.pow(2) - (4 * a * c);
+
+    match det.cmp(&0) {
+        std::cmp::Ordering::Less => None,
+        std::cmp::Ordering::Equal => Some((-b / (2 * a), -b / (2 * a))),
+        std::cmp::Ordering::Greater => {
+            let r1: f64 = (-(b as f64) - f64::sqrt(det as f64)) / (2. * a as f64);
+            let r2: f64 = (-(b as f64) + f64::sqrt(det as f64)) / (2. * a as f64);
+
+            Some((f64::ceil(r1.min(r2)) as i64, f64::floor(r1.max(r2)) as i64))
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -80,19 +67,23 @@ struct Race {
 
 impl Race {
     fn solve(&self) -> Option<i64> {
-        find_roots(-1, self.time as i64, -(self.record as i64)).map(|(r1, r2)| {
+        find_roots(-1, self.time, -self.record).map(|(r1, r2)| {
             let r1 = (r1 - 1..=r1 + 1)
-                .filter(|&hold| (self.time as i64 - hold) * hold > self.record as i64)
+                .filter(|&hold| (self.time - hold) * hold > self.record)
                 .min()
                 .unwrap();
             let r2 = (r2 - 1..=r2 + 1)
-                .filter(|&hold| (self.time as i64 - hold) * hold > self.record as i64)
+                .filter(|&hold| (self.time - hold) * hold > self.record)
                 .max()
                 .unwrap();
 
             r2 - r1 + 1
         })
     }
+}
+
+fn parse_numbers(input: &str) -> IResult<&str, Vec<i64>> {
+    separated_list1(space1, map_res(digit1, str::parse))(input)
 }
 
 fn parse_races(input: &str) -> IResult<&str, Vec<Race>> {
@@ -107,7 +98,7 @@ fn parse_races(input: &str) -> IResult<&str, Vec<Race>> {
             .1
             .clone()
             .into_iter()
-            .zip(races[1].1.clone().into_iter())
+            .zip(races[1].1.clone())
             .map(|(time, record)| Race { time, record })
             .collect_vec(),
     ))
