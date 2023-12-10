@@ -1,7 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use anyhow::Result;
-use itertools::Itertools;
 
 #[allow(dead_code)]
 const TEST_1_1: &str = "-L|F7
@@ -51,7 +50,7 @@ L7JLJL-JLJLJL--JLJ.L";
 const INPUT: &str = include_str!("../../inputs/day-10.txt");
 
 fn main() -> Result<()> {
-    println!("Day XX");
+    println!("Day 10");
     println!("\t1: {}", part_1(INPUT)?);
     println!("\t2: {}", part_2(INPUT)?);
 
@@ -105,8 +104,6 @@ fn part_1(input: &str) -> Result<usize> {
         len_path += 1;
     }
 
-    eprintln!("{len_path} -> {}", (len_path as f64 / 2.).ceil() as usize);
-
     Ok(len_path / 2)
 }
 
@@ -151,6 +148,7 @@ fn get_connect(grid: &[Vec<char>], x: usize, y: usize) -> Vec<Dir> {
     dirs
 }
 
+#[allow(dead_code)]
 fn show_loop(
     grid: &[Vec<char>],
     tiles: &HashMap<(usize, usize), char>,
@@ -159,10 +157,10 @@ fn show_loop(
     ch: char,
 ) {
     for (x_, line) in grid.iter().enumerate() {
-        for (y_, c) in line.iter().enumerate() {
+        for (y_, _) in line.iter().enumerate() {
             if x_ == x && y_ == y {
                 eprint!("{ch}")
-            } else if tiles.get(&(x_, y_)).is_some() {
+            } else if let Some(c) = tiles.get(&(x_, y_)) {
                 eprint!(
                     "{}",
                     match c {
@@ -202,16 +200,25 @@ fn part_2(input: &str) -> Result<usize> {
         .unwrap();
 
     // Get loop tiles
-    let connect = get_connect(&grid, s_x, s_y)[0];
-    let (mut x, mut y) = match connect {
+    let connects = get_connect(&grid, s_x, s_y);
+    let (mut x, mut y) = match connects[0] {
         Dir::North => (s_x - 1, s_y),
         Dir::South => (s_x + 1, s_y),
         Dir::East => (s_x, s_y + 1),
         Dir::West => (s_x, s_y - 1),
     };
-    let mut coming_from = connect.from();
+    let start_tile = match (connects[0], connects[1]) {
+        (Dir::North, Dir::South) | (Dir::South, Dir::North) => '|',
+        (Dir::North, Dir::East) | (Dir::East, Dir::North) => 'L',
+        (Dir::North, Dir::West) | (Dir::West, Dir::North) => 'J',
+        (Dir::South, Dir::East) | (Dir::East, Dir::South) => 'F',
+        (Dir::South, Dir::West) | (Dir::West, Dir::South) => '7',
+        (Dir::East, Dir::West) | (Dir::West, Dir::East) => '-',
+        _ => unreachable!(),
+    };
+    let mut coming_from = connects[0].from();
     let mut tiles = HashMap::new();
-    tiles.insert((s_x, s_y), 'S');
+    tiles.insert((s_x, s_y), start_tile);
 
     while x != s_x || y != s_y {
         tiles.insert((x, y), grid[x][y]);
@@ -232,10 +239,6 @@ fn part_2(input: &str) -> Result<usize> {
         };
     }
 
-    show_loop(&grid, &tiles, x, y, 'X');
-    panic!();
-
-    eprintln!("{tiles:?}");
     let mut n = 0;
     for x in 0..(grid.len()) {
         for y in 0..(grid[0].len()) {
@@ -243,37 +246,12 @@ fn part_2(input: &str) -> Result<usize> {
                 continue;
             }
             if is_inside(&tiles, x, y) {
-                show_loop(&grid, &tiles, x, y, 'I');
                 n += 1;
-            } else {
-                show_loop(&grid, &tiles, x, y, 'O');
             }
         }
     }
 
-    eprintln!("Inside: {n}");
-
-    todo!()
-}
-
-fn does_connect(p1: char, p2: char, dir: Dir) -> bool {
-    match dir {
-        // Check if N(p1)->S(p2) works
-        Dir::South => match (p1, p2) {
-            ('|', '|' | 'L' | 'J') => true,
-            ('7', '|' | 'L' | 'J') => true,
-            ('F', '|' | 'L' | 'J') => true,
-            _ => false,
-        },
-        // Check if W(p1)->E(p2) works
-        Dir::East => match (p1, p2) {
-            ('-', '-' | '7' | 'J') => true,
-            ('F', '-' | '7' | 'J') => true,
-            ('L', '-' | '7' | 'J') => true,
-            _ => false,
-        },
-        _ => unreachable!("Could not connect {p1} and {p2} along {dir:?}"),
-    }
+    Ok(n)
 }
 
 fn is_inside(tiles: &HashMap<(usize, usize), char>, x: usize, y: usize) -> bool {
@@ -281,91 +259,38 @@ fn is_inside(tiles: &HashMap<(usize, usize), char>, x: usize, y: usize) -> bool 
         return false;
     }
 
-    let h_ray = (0..=y)
-        .map(|c_y| tiles.get(&(x, c_y)).unwrap_or(&'.'))
-        .collect_vec();
-    let v_ray = (0..=x)
-        .map(|c_x| tiles.get(&(c_x, y)).unwrap_or(&'.'))
-        .collect_vec();
-
-    eprintln!("({x},{y})");
-    eprintln!("\tH: {h_ray:?}");
-    eprint!("\t\t");
-
-    let mut h_chunks = 0;
-    for (k, group) in &h_ray
-        .into_iter()
-        .tuple_windows()
-        .group_by(|(&p1, &p2)| match (p1, p2) {
-            ('.', _) => false,
-            (_, '.') => false,
-            (p1, p2) => does_connect(p1, p2, Dir::East),
-        })
-    {
-        let v = group.collect::<Vec<_>>();
-        eprint!("{k}{v:?} ");
-        if k {
-            if v.len() > 1 {
-                h_chunks += 2;
-            } else {
-                h_chunks += 1;
+    let mut crosses = 0;
+    let mut edge_start = '.';
+    for c_y in 0..=y {
+        if let Some(c) = tiles.get(&(x, c_y)) {
+            match c {
+                '|' => crosses += 1,
+                'L' => {
+                    edge_start = 'L';
+                    crosses += 1;
+                }
+                'J' => {
+                    if edge_start == 'L' {
+                        crosses += 1;
+                    }
+                    edge_start = '.';
+                }
+                'F' => {
+                    edge_start = 'F';
+                    crosses += 1;
+                }
+                '7' => {
+                    if edge_start == 'F' {
+                        crosses += 1;
+                    }
+                    edge_start = '.';
+                }
+                _ => {}
             }
         }
     }
-    eprintln!();
 
-    // for (k, group) in &h_ray.iter().group_by(|&&&elt| elt == '.') {
-    //     eprint!("");
-    //     // eprint!("{:?} ", group.collect::<Vec<_>>());
-    //     if !k {
-    //         // An edge
-    //         let group = group.collect::<Vec<_>>();
-    //         if group.len() > 1 {
-    //             let s = group
-    //                 .into_iter()
-    //                 .tuple_windows()
-    //                 .all(|(&&c1, &&c2)| does_connect(c1, c2, Dir::South));
-    //             eprintln!("S:{s:?} ");
-    //             h_chunks += 2
-    //         } else {
-    //             h_chunks += 1
-    //         }
-    //     } else {
-    //         eprint!("-- ");
-    //     }
-    // }
-    eprintln!("");
-
-    eprintln!("\tV: {v_ray:?}");
-    eprint!("\t\t");
-    let mut v_chunks = 0;
-    for (k, group) in &v_ray
-        .into_iter()
-        .tuple_windows()
-        .group_by(|(&p1, &p2)| match (p1, p2) {
-            ('.', _) => false,
-            (_, '.') => false,
-            (p1, p2) => does_connect(p1, p2, Dir::South),
-        })
-    {
-        let v = group.collect::<Vec<_>>();
-        eprint!("{k}{v:?} ");
-        // eprint!("{k}{:?} ", group.collect::<Vec<_>>());
-        if k {
-            if v.len() > 1 {
-                v_chunks += 2;
-            } else {
-                v_chunks += 1;
-            }
-        }
-    }
-    eprintln!();
-
-    //
-    // let h_ray_sum = h_ray.into_iter().filter(|c| *c).count();
-    // let v_ray_sum = v_ray.into_iter().filter(|c| *c).count();
-
-    v_chunks % 2 == 1 && h_chunks % 2 == 1
+    crosses % 2 == 1
 }
 
 #[cfg(test)]
@@ -389,7 +314,7 @@ mod tests {
 
     #[test]
     fn test_2_0() {
-        assert_eq!(4, part_2(TEST_1_1).unwrap());
+        assert_eq!(1, part_2(TEST_1_1).unwrap());
     }
 
     #[test]
@@ -397,15 +322,15 @@ mod tests {
         assert_eq!(4, part_2(TEST_2_1).unwrap());
     }
 
-    // #[test]
-    // fn test_2_2() {
-    //     assert_eq!(8, part_2(TEST_2_2).unwrap());
-    // }
+    #[test]
+    fn test_2_2() {
+        assert_eq!(8, part_2(TEST_2_2).unwrap());
+    }
 
-    // #[test]
-    // fn test_2_3() {
-    //     assert_eq!(10, part_2(TEST_2_3).unwrap());
-    // }
+    #[test]
+    fn test_2_3() {
+        assert_eq!(10, part_2(TEST_2_3).unwrap());
+    }
 
     // #[test]
     // fn test_input_2() {
