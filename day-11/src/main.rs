@@ -21,10 +21,13 @@ fn main() -> Result<()> {
     let (galaxies, empty_rows, empty_cols) = parse_galaxies(INPUT);
 
     println!("Day 11");
-    println!("\t1: {}", part_1(&galaxies, &empty_rows, &empty_cols, 1)?);
+    println!(
+        "\t1: {}",
+        solve_expanded(&galaxies, &empty_rows, &empty_cols, 1)?
+    );
     println!(
         "\t2: {}",
-        part_1(&galaxies, &empty_rows, &empty_cols, 1000000 - 1)?
+        solve_expanded(&galaxies, &empty_rows, &empty_cols, 1000000 - 1)?
     );
 
     Ok(())
@@ -51,25 +54,23 @@ fn parse_galaxies(input: &str) -> (Vec<Galaxy>, Vec<usize>, Vec<usize>) {
     }
 
     let empty_rows = (0..=max_row)
-        .into_iter()
         .filter(|x| !seen_rows.contains(x))
         .collect_vec();
     let empty_cols = (0..=max_col)
-        .into_iter()
         .filter(|y| !seen_cols.contains(y))
         .collect_vec();
 
     (galaxies, empty_rows, empty_cols)
 }
 
-fn part_1(
+fn solve_expanded(
     galaxies: &[Galaxy],
     empty_rows: &[usize],
     empty_cols: &[usize],
     offset: usize, // Number of additional rows/cols
 ) -> Result<usize> {
     Ok(galaxies
-        .into_iter()
+        .iter()
         .map(|(x, y)| {
             let expanded_x = x + offset * empty_rows.iter().filter(|&&row| row < *x).count();
             let expanded_y = y + offset * empty_cols.iter().filter(|&&col| col < *y).count();
@@ -93,7 +94,10 @@ mod tests {
     #[test]
     fn test_1() {
         let (galaxies, empty_rows, empty_cols) = parse_galaxies(TEST_1);
-        assert_eq!(374, part_1(&galaxies, &empty_rows, &empty_cols, 1).unwrap());
+        assert_eq!(
+            374,
+            solve_expanded(&galaxies, &empty_rows, &empty_cols, 1).unwrap()
+        );
     }
 
     #[test]
@@ -101,7 +105,7 @@ mod tests {
         let (galaxies, empty_rows, empty_cols) = parse_galaxies(INPUT);
         assert_eq!(
             10173804,
-            part_1(&galaxies, &empty_rows, &empty_cols, 1).unwrap()
+            solve_expanded(&galaxies, &empty_rows, &empty_cols, 1).unwrap()
         );
     }
 
@@ -112,7 +116,7 @@ mod tests {
         for (off, dist) in [(10, 1030), (100, 8410)] {
             assert_eq!(
                 dist,
-                part_1(&galaxies, &empty_rows, &empty_cols, off - 1).unwrap()
+                solve_expanded(&galaxies, &empty_rows, &empty_cols, off - 1).unwrap()
             );
         }
     }
@@ -122,7 +126,7 @@ mod tests {
         let (galaxies, empty_rows, empty_cols) = parse_galaxies(INPUT);
         assert_eq!(
             634324905172,
-            part_1(&galaxies, &empty_rows, &empty_cols, 1000000 - 1).unwrap()
+            solve_expanded(&galaxies, &empty_rows, &empty_cols, 1000000 - 1).unwrap()
         );
     }
 }
