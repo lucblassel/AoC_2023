@@ -12,6 +12,7 @@ checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 name = "day-01"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "itertools",
 ]
 
@@ -97,6 +98,15 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "itertools",
+]
+
+[[package]]
+name = "day-12"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "nom",
 ]
 
 [[package]]
