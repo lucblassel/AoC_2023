@@ -29,7 +29,7 @@ const ANSWER_1: usize = 40006;
 const ANSWER_2: usize = 28627;
 
 fn main() -> Result<()> {
-    println!("Day XX");
+    println!("Day 13");
     println!("\t1: {}", part_1(INPUT)?);
     println!("\t2: {}", part_2(INPUT)?);
 

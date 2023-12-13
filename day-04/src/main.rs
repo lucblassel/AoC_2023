@@ -26,7 +26,7 @@ fn main() -> Result<()> {
     let (remaining, cards) = parse_cards(INPUT)?;
     assert!(remaining.is_empty(), "Remaining: '{remaining}'");
 
-    println!("Day 01");
+    println!("Day 04");
     println!("\t1: {}", part_1(&cards)?);
     println!("\t2: {}", part_2(&cards)?);
 
