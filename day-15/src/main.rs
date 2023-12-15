@@ -28,13 +28,11 @@ fn part_1(input: &str) -> Result<usize> {
 }
 
 fn hash(input: &str) -> usize {
-    input.as_bytes().iter().fold(0, |acc, b| {
-        if *b == b'\n' {
-            acc
-        } else {
-            (acc + *b as usize) * 17 % 256
-        }
-    })
+    input
+        .as_bytes()
+        .iter()
+        .filter(|&v| *v != b'\n')
+        .fold(0, |acc, b| (acc + *b as usize) * 17 % 256)
 }
 
 fn part_2(input: &'static str) -> Result<usize> {
